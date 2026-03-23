@@ -88,7 +88,7 @@ function getToday() {
 
 // scraping
 async function scrape(kode) {
-  const URL = https://duatiga0326.kartu275.com/history/result/${kode}/kosong;
+  const URL = `https://duatiga0326.kartu275.com/history/result/${kode}/kosong`;
 
   const res = await axios.get(URL);
   const $ = cheerio.load(res.data);
