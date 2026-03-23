@@ -8,17 +8,64 @@ app.use(cors());
 
 const PORT = process.env.PORT || 3000;
 
-// 🔥 FULL MARKET MAPPING
+// 🔥 FULL MARKET (PAKAI KODE ASLI)
 const markets = {
-  china: "p13852",
-  cambodia: "p13851",
-  singapore: "p13860",
-  hongkong: "p13855",
-  taiwan: "p13862",
-  macau: "m17",
-  japan: "p15472",
-  korea: "p28515",
-  thailand: "p28514"
+  "m17": "TOTO MACAU POOL",
+  "p13850": "AUSTRIA POOL",
+  "p13851": "CAMBODIA POOL",
+  "p13852": "CHINA POOL",
+  "p13853": "CYPRUS POOL",
+  "p13854": "GUANGDONG POOL",
+  "p13855": "HONGKONG",
+  "p13856": "MADRID POOL",
+  "p13857": "MIAMI POOL",
+  "p13858": "PHILIPPINES POOL",
+  "p13859": "ROMA POOL",
+  "p13860": "SINGAPORE POOL",
+  "p13861": "SYDNEY",
+  "p13862": "TAIWAN POOL",
+  "p13863": "TOTOBEIJING POOL",
+  "p13864": "TURIN POOL",
+  "p15472": "JAPAN POOL",
+  "p15473": "ICELAND POOL",
+  "p18887": "BULLSEYE POOL",
+  "p18901": "NEWYORKEVE POOL",
+  "p18902": "NEWYORKMID POOL",
+  "p18903": "FLORIDAMID POOL",
+  "p18904": "FLORIDAEVE POOL",
+  "p18905": "KENTUCKYEVE POOL",
+  "p18906": "KENTUCKYMID POOL",
+  "p18907": "CAROLINAEVE POOL",
+  "p18908": "CAROLINADAY POOL",
+  "p18909": "OREGON12 POOL",
+  "p18910": "OREGON09 POOL",
+  "p18911": "OREGON03 POOL",
+  "p18912": "OREGON06 POOL",
+  "p18913": "CALIFORNIA POOL",
+  "p28512": "BULGARIA POOL",
+  "p28513": "HUNGARY POOL",
+  "p28514": "LAOS POOL",
+  "p28515": "JEJULOTTO POOL",
+  "p28516": "TOTOFUZHOU POOL",
+  "p28517": "BHUTAN POOL",
+  "p28518": "TORONTO POOL",
+  "p30090": "MONACO POOL",
+  "p30091": "CUBA POOL",
+  "p30092": "ECUADOR POOL",
+  "p30093": "FOSHAN POOL",
+  "p30095": "CHENGDU POOL",
+  "p30097": "CHONGQING POOL",
+  "p30100": "KOWLOON POOL",
+  "p30102": "TAICHUNG POOL",
+  "p30104": "HAITI POOL",
+  "p30105": "DENVER POOL",
+  "p30527": "ITALY POOL",
+  "p30528": "FRANCE POOL",
+  "p30529": "CHILE POOL",
+  "p30530": "MEXICO POOL",
+  "p30531": "OSLO POOL",
+  "m51": "TOTO MACAO 5D",
+  "m83": "KING KONG 4D"
 };
 
 // cache realtime
@@ -48,7 +95,6 @@ async function scrape(kode) {
 
     const [date, time] = datetime.split("|").map(s => s.trim());
 
-    // 🔥 hanya ambil hari ini
     if (date === getToday()) {
       result = { number, date, time };
       return false;
@@ -58,24 +104,21 @@ async function scrape(kode) {
   return result;
 }
 
-// 🔥 AUTO UPDATE LOOP (REALTIME FEEL)
+// 🔥 AUTO UPDATE LOOP
 async function updateLoop() {
-  for (const name in markets) {
-    const kode = markets[name];
-
+  for (const kode in markets) {
     try {
       const data = await scrape(kode);
 
       if (!data) continue;
 
-      // hanya update jika berubah
-      if (!cache[name] || cache[name].number !== data.number) {
-        console.log(`UPDATE ${name}: ${data.number}`);
-        cache[name] = data;
+      if (!cache[kode] || cache[kode].number !== data.number) {
+        console.log(`UPDATE ${kode}: ${data.number}`);
+        cache[kode] = data;
       }
 
     } catch (err) {
-      console.log("ERROR:", name);
+      console.log("ERROR:", kode);
     }
   }
 }
@@ -83,16 +126,16 @@ async function updateLoop() {
 // jalan tiap 5 detik
 setInterval(updateLoop, 5000);
 
-// 🔥 ENDPOINT API
-app.get("/market/:name", (req, res) => {
-  const name = req.params.name.toLowerCase();
+// 🔥 ENDPOINT UTAMA (PAKAI KODE)
+app.get("/market/:kode", (req, res) => {
+  const kode = req.params.kode;
 
-  if (!markets[name]) {
+  if (!markets[kode]) {
     return res.status(404).json({ error: "market not found" });
   }
 
   res.json(
-    cache[name] || {
+    cache[kode] || {
       number: "-",
       date: "-",
       time: "-"
@@ -100,14 +143,14 @@ app.get("/market/:name", (req, res) => {
   );
 });
 
-// list market
+// list semua market
 app.get("/markets", (req, res) => {
   res.json(markets);
 });
 
-// root check
+// root
 app.get("/", (req, res) => {
-  res.send("API RUNNING 🔥");
+  res.send("API LIVE RESULT RUNNING 🔥");
 });
 
 app.listen(PORT, () => {
