@@ -141,7 +141,7 @@ async function updateLoop() {
 }
 
 // jalan cepat (3 detik)
-setInterval(updateLoop, 3000);
+setInterval(updateLoop, 2000);
 
 // API fallback
 app.get("/market/:kode", (req, res) => {
