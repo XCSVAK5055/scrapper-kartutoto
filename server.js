@@ -95,7 +95,7 @@ function getTodayFormatted() {
 // scraping
 async function scrape(kode, retry = 2) {
   try {
-    const URL = `https://duatiga0326.kartu275.com/history/result/${kode}/kosong`;
+    const URL = `https://duaempat0326.kartu275.com/history/result/${kode}/kosong`;
 
     const res = await axios.get(URL, { timeout: 5000 });
 
