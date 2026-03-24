@@ -85,11 +85,11 @@ let cache = {};
 function getTodayFormatted() {
   const d = new Date();
 
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = String(d.getMonth() + 1).padStart(2, "0");
   const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
 
-  return `${day}-${month}-${year}`;
+  return `${year}-${month}-${day}`;
 }
 
 // scraping
@@ -97,7 +97,14 @@ async function scrape(kode, retry = 2) {
   try {
     const URL = `https://duaempat0326.kartu275.com/history/result/${kode}/kosong`;
 
-    const res = await axios.get(URL, { timeout: 5000 });
+    const res = await axios.get(URL, {
+  timeout: 5000,
+  headers: {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+    "Accept": "text/html,application/xhtml+xml",
+    "Referer": "https://kartu275.com/"
+  }
+});
 
     const $ = cheerio.load(res.data);
 
