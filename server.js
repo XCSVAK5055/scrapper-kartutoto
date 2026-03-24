@@ -93,65 +93,90 @@ function getTodayFormatted() {
 }
 
 // scraping
-async function scrape(kode) {
-  const URL = `https://duatiga0326.kartu275.com/history/result/${kode}/kosong`;
+async function scrape(kode, retry = 2) {
+  try {
+    const URL = `https://duatiga0326.kartu275.com/history/result/${kode}/kosong`;
 
-  const res = await axios.get(URL);
-  const $ = cheerio.load(res.data);
+    const res = await axios.get(URL, { timeout: 5000 });
 
-  let result = null;
+    const $ = cheerio.load(res.data);
 
-$("table tbody tr").each((i, el) => {
-  const tds = $(el).find("td");
+    let result = null;
 
-  const datetime = $(tds[2]).text().trim();
-  const number = $(tds[3]).text().trim();
+    $("table tbody tr").each((i, el) => {
+      const tds = $(el).find("td");
 
-  if (!datetime) return;
+      const datetime = $(tds[2]).text().trim();
+      const number = $(tds[3]).text().trim();
 
-  const [date, time] = datetime.split("|").map(s => s.trim());
-  const today = getTodayFormatted();
+      if (!datetime) return;
 
-  // 🔥 HANYA AMBIL HARI INI
-  if (date === today) {
-    result = { number, date, time };
-    return false;
+      const [date, time] = datetime.split("|").map(s => s.trim());
+      const today = getTodayFormatted();
+
+      if (date === today) {
+        result = { number, date, time };
+        return false;
+      }
+    });
+
+    return result;
+
+  } catch (e) {
+
+    if (retry > 0) {
+      return scrape(kode, retry - 1); // 🔥 retry
+    }
+
+    return null;
   }
-});
-
-return result;
 }
-
 // 🔥 LOOP REALTIME
 async function updateLoop() {
-  for (const kode in markets) {
-    try {
-      const data = await scrape(kode);
 
-      if (!data) continue;
+  const keys = Object.keys(markets);
+  const chunkSize = 5; // 🔥 MAX 5 REQUEST SEKALI JALAN
 
-      if (!cache[kode] || cache[kode].number !== data.number) {
-        cache[kode] = data;
+  for (let i = 0; i < keys.length; i += chunkSize) {
 
-        console.log("NEW :", kode, data.number);
+    const batch = keys.slice(i, i + chunkSize);
 
-        // 🔥 PUSH KE FRONTEND
-        io.emit("update", {
-          kode,
-          ...data
-        });
+    await Promise.all(batch.map(async (kode) => {
+      try {
+
+        const data = await scrape(kode);
+
+        if (!data) return;
+
+        if (!cache[kode] || cache[kode].number !== data.number) {
+
+          cache[kode] = data;
+
+          console.log("NEW :", kode, data.number);
+
+          io.emit("update", {
+            kode,
+            ...data
+          });
+
+        }
+
+      } catch (e) {
+        console.log("error", kode);
       }
+    }));
 
-    } catch (e) {
-      console.log("error", kode);
-    }
+    // 🔥 JEDA ANTAR BATCH (PENTING)
+    await new Promise(r => setTimeout(r, 300));
   }
 }
 
 async function startLoop() {
+  await new Promise(r => setTimeout(r, 2000));
+
   while (true) {
     await updateLoop();
-    await new Promise(r => setTimeout(r, 2000));
+    await new Promise(r => setTimeout(r, 1500));
   }
 }
 
