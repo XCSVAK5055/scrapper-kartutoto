@@ -82,8 +82,14 @@ const markets = {
 let cache = {};
 
 // ambil hari ini
-function getToday() {
-  return new Date().toISOString().split("T")[0];
+function getTodayFormatted() {
+  const d = new Date();
+
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+
+  return `${day}-${month}-${year}`;
 }
 
 // scraping
@@ -95,23 +101,25 @@ async function scrape(kode) {
 
   let result = null;
 
-  $("table tbody tr").each((i, el) => {
-    const tds = $(el).find("td");
+$("table tbody tr").each((i, el) => {
+  const tds = $(el).find("td");
 
-    const datetime = $(tds[2]).text().trim();
-    const number = $(tds[3]).text().trim();
+  const datetime = $(tds[2]).text().trim();
+  const number = $(tds[3]).text().trim();
 
-    if (!datetime) return;
+  if (!datetime) return;
 
-    const [date, time] = datetime.split("|").map(s => s.trim());
+  const [date, time] = datetime.split("|").map(s => s.trim());
+  const today = getTodayFormatted();
 
-    if (date === getTodayFormatted()) {
-      result = { number, date, time };
-      return false;
-    }
-  });
+  // 🔥 HANYA AMBIL HARI INI
+  if (date === today) {
+    result = { number, date, time };
+    return false;
+  }
+});
 
-  return result;
+return result;
 }
 
 // 🔥 LOOP REALTIME
@@ -125,7 +133,7 @@ async function updateLoop() {
       if (!cache[kode] || cache[kode].number !== data.number) {
         cache[kode] = data;
 
-        console.log("NEW:", kode, data.number);
+        console.log("NEW :", kode, data.number);
 
         // 🔥 PUSH KE FRONTEND
         io.emit("update", {
@@ -140,8 +148,14 @@ async function updateLoop() {
   }
 }
 
-// jalan cepat (3 detik)
-setInterval(updateLoop, 3000);
+async function startLoop() {
+  while (true) {
+    await updateLoop();
+    await new Promise(r => setTimeout(r, 2000));
+  }
+}
+
+startLoop();
 
 // API fallback
 app.get("/market/:kode", (req, res) => {
