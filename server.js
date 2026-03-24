@@ -105,7 +105,7 @@ async function scrape(kode) {
 
     const [date, time] = datetime.split("|").map(s => s.trim());
 
-    if (date === getToday()) {
+    if (date === getTodayFormatted()) {
       result = { number, date, time };
       return false;
     }
